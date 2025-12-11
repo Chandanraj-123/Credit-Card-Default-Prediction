@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Sanctioned</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container" style="max-width: 600px;">
+        <div class="glass-panel animate-fade-in" style="padding: 2rem; text-align: center;">
+            <div style="font-size: 4rem; color: var(--success); margin-bottom: 1rem;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+
+            <h2 style="color: var(--success); margin-bottom: 2rem;">Credit Request Sanctioned!</h2>
+
+            <div class="card"
+                style="background: rgba(16, 185, 129, 0.1); border-color: var(--success); text-align: left; margin-bottom: 2rem;">
+                <p><strong>Requested Amount:</strong> ₹<span id="reqAmount"></span></p>
+                <p><strong>Month/Year:</strong> <span id="reqDate"></span></p>
+
+                <div style="margin: 2rem 0; text-align: center; font-style: italic; font-size: 1.1rem;">
+                    "Please Do Spend money with concern.<br>
+                    Enjoy !!!!!!!!!!!!!!!!!!!!!!!"
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
+
+                <p><strong>Total Amount Paid:</strong> ₹<span id="totalPaid"></span></p>
+                <p><strong>Balance Amount:</strong> ₹<span id="balance"></span></p>
+            </div>
+
+            <button class="btn btn-primary" onclick="window.location.href='/customer-home'">
+                Back to Home
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const result = JSON.parse(localStorage.getItem('creditResult'));
+        if (!result) window.location.href = '/customer-home';
+
+        document.getElementById('reqAmount').textContent = result.requested_amount;
+        document.getElementById('reqDate').textContent = `${result.requested_month.toUpperCase()} ${result.requested_year}`;
+
+        // Handle different response structures (ML vs Percentage)
+        const totalPaid = result.total_paid !== undefined ? result.total_paid : 'N/A';
+        const balance = result.balance !== undefined ? result.balance : 'N/A';
+
+        document.getElementById('totalPaid').textContent = typeof totalPaid === 'number' ? totalPaid.toFixed(2) : totalPaid;
+        document.getElementById('balance').textContent = typeof balance === 'number' ? balance.toFixed(2) : balance;
+    </script>
+</body>
+
+</html>

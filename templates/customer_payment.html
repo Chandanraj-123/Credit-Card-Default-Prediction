@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make Payment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container" style="max-width: 600px;">
+        <div class="glass-panel animate-fade-in" style="padding: 2rem;">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Make Payment</h2>
+
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label>Year</label>
+                    <select id="year" class="form-control" required>
+                        <option value="2021">2021</option>
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Month</label>
+                    <select id="month" class="form-control" required>
+                        <option value="jan">January</option>
+                        <option value="feb">February</option>
+                        <option value="mar">March</option>
+                        <option value="apr">April</option>
+                        <option value="may">May</option>
+                        <option value="jun">June</option>
+                        <option value="jul">July</option>
+                        <option value="aug">August</option>
+                        <option value="sep">September</option>
+                        <option value="oct">October</option>
+                        <option value="nov">November</option>
+                        <option value="dec">December</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="amount" class="form-control" min="1" step="0.01" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-check-circle" style="margin-right: 8px;"></i> Pay Now
+                </button>
+            </form>
+
+            <div id="resultSection" style="margin-top: 2rem; display: none;">
+                <div class="card" style="background: rgba(16, 185, 129, 0.1); border-color: var(--success);">
+                    <h4 style="color: var(--success);"><i class="fas fa-check"></i> Payment Successful</h4>
+                    <p id="resultMessage"></p>
+                    <div id="paymentDetails" style="margin-top: 1rem; font-size: 0.9rem;"></div>
+                    <div id="excessAmount" style="margin-top: 1rem; font-weight: bold; color: var(--accent);"></div>
+                </div>
+                <button class="btn btn-secondary" onclick="window.location.href='/customer-home'"
+                    style="width: 100%; margin-top: 1rem;">Back to Home</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="/customer-home" style="color: var(--text-muted); text-decoration: none;">Cancel</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const customerData = JSON.parse(localStorage.getItem('customerData'));
+        if (!customerData) window.location.href = '/customer-login';
+
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const year = document.getElementById('year').value;
+            const month = document.getElementById('month').value;
+            const amount = document.getElementById('amount').value;
+
+            try {
+                const response = await fetch('/api/customer/payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_id: customerData.id,
+                        year,
+                        month,
+                        amount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('paymentForm').style.display = 'none';
+                    document.getElementById('resultSection').style.display = 'block';
+                    document.getElementById('resultMessage').textContent = data.message;
+
+                    if (data.excess_amount > 0) {
+                        document.getElementById('excessAmount').textContent = `Excess Amount Credited to Bank: ₹${data.excess_amount.toFixed(2)}`;
+                    }
+
+                    let detailsHtml = '<ul>';
+                    data.payments_made.forEach(p => {
+                        detailsHtml += `<li>Paid ₹${p.amount.toFixed(2)} for ${p.month.toUpperCase()} ${p.year}</li>`;
+                    });
+                    detailsHtml += '</ul>';
+                    document.getElementById('paymentDetails').innerHTML = detailsHtml;
+                } else {
+                    alert('Payment failed: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during payment.');
+            }
+        });
+    </script>
+</body>
+
+</html>

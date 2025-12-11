@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="glass-panel animate-fade-in" style="padding: 3rem;">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Customer Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Customer ID</label>
+                    <input type="number" id="id" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" class="form-control" required>
+                        <i class="fas fa-eye eye-icon" onclick="togglePassword()"></i>
+                    </div>
+                    <div id="errorMsg"
+                        style="color: var(--error); font-size: 0.9rem; margin-top: 0.5rem; display: none;">
+                        Incorrect data please check id and password
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="/" style="color: var(--text-muted); text-decoration: none;">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.querySelector('.eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            try {
+                const response = await fetch('/api/customer/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, password })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('customerData', JSON.stringify(data.data));
+                    window.location.href = '/customer-home';
+                } else {
+                    errorMsg.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>

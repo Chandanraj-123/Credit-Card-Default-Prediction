@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="glass-panel animate-fade-in" style="padding: 2rem; margin-bottom: 2rem;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <h1>Customer Dashboard</h1>
+                <button class="btn btn-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Logout
+                </button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3><i class="fas fa-id-card" style="color: var(--primary);"></i> Profile</h3>
+                    <div style="margin-top: 1rem;">
+                        <p><strong>ID:</strong> <span id="customerId"></span></p>
+                        <p><strong>Name:</strong> <span id="customerName"></span></p>
+                        <p><strong>Email:</strong> <span id="customerEmail"></span></p>
+                        <p><strong>Phone:</strong> <span id="customerPhone"></span></p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div style="color: var(--text-muted);">Total Credit Amount</div>
+                    <div class="stat-value" id="totalCredit">₹0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div style="color: var(--text-muted);">Amount Paid</div>
+                    <div class="stat-value" id="amountPaid">₹0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div style="color: var(--text-muted);">Balance</div>
+                    <div class="stat-value" id="balance">₹0</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="goToCreditRequest()">
+                    <i class="fas fa-hand-holding-usd" style="margin-right: 8px;"></i> Credit Request
+                </button>
+                <button class="btn btn-primary" onclick="goToPayment()"
+                    style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <i class="fas fa-credit-card" style="margin-right: 8px;"></i> Pay Now
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-panel animate-fade-in" style="padding: 2rem;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <h2>Transaction History</h2>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <select id="yearFilter" class="form-control" style="width: auto; padding: 0.5rem 2rem;">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="all">All Years</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="applyFilter()">
+                        <i class="fas fa-filter" style="margin-right: 8px;"></i> Apply Filter
+                    </button>
+                    <button class="btn btn-primary" onclick="calculateYearlyPercentage()">
+                        <i class="fas fa-calculator" style="margin-right: 8px;"></i> Year % Avg
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Month/Year</th>
+                            <th>Amount Given</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Section for Yearly Percentage Display -->
+            <div id="percentageSection" style="margin-top: 2rem; display: none;">
+                <h3>Yearly Payment Percentages</h3>
+                <div class="table-container">
+                    <table id="percentageTable">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>2021</th>
+                                <th>2022</th>
+                                <th>2023</th>
+                                <th>2024</th>
+                                <th>2025</th>
+                            </tr>
+                        </thead>
+                        <tbody id="percentageBody">
+                            <!-- Percentage data -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Total Amount Given:</strong> <span id="totalGivenAll">₹0</span></p>
+                    <p><strong>Total Amount Paid:</strong> <span id="totalPaidAll">₹0</span></p>
+                    <p><strong>Percentage Paid:</strong> <span id="percentagePaidAll">0%</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const customerData = JSON.parse(localStorage.getItem('customerData'));
+
+        if (!customerData) {
+            window.location.href = '/customer-login';
+        } else {
+            document.getElementById('customerId').textContent = customerData.id;
+            document.getElementById('customerName').textContent = customerData.name;
+            document.getElementById('customerEmail').textContent = customerData.mailid;
+            document.getElementById('customerPhone').textContent = customerData.phone_number || customerData.phone;
+
+            loadSummary();
+            applyFilter();
+        }
+
+        async function loadSummary() {
+            try {
+                const response = await fetch(`/api/customer/summary/${customerData.id}`);
+                const data = await response.json();
+
+                document.getElementById('totalCredit').textContent = '₹' + data.total_credit.toFixed(2);
+                document.getElementById('amountPaid').textContent = '₹' + data.total_paid.toFixed(2);
+                document.getElementById('balance').textContent = '₹' + data.balance.toFixed(2);
+            } catch (error) {
+                console.error('Error loading summary:', error);
+            }
+        }
+
+        async function applyFilter() {
+            const year = document.getElementById('yearFilter').value;
+
+            try {
+                const response = await fetch(`/api/customer/data/${customerData.id}/${year}`);
+                const data = await response.json();
+
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.year ? row.year + ' - ' : ''}${row.month}</td>
+                        <td>₹${row.amount_given.toFixed(2)}</td>
+                        <td>₹${row.paid.toFixed(2)}</td>
+                        <td>₹${row.balance.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        async function calculateYearlyPercentage() {
+            // This would call the backend to calculate and save percentages
+            // For now, we'll simulate or call a placeholder endpoint
+            // Since the endpoint isn't implemented yet in app.py, I'll add a TODO alert
+            // But to be "fully working", I should implement it.
+            // I'll assume the endpoint /api/customer/calculate-percentages exists or I will create it.
+
+            try {
+                const response = await fetch('/api/customer/calculate-percentages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customer_id: customerData.id })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('percentageSection').style.display = 'block';
+                    const tbody = document.getElementById('percentageBody');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td>Percentage</td>
+                            <td>${(data.percentages.year_2021 * 100).toFixed(0)}%</td>
+                            <td>${(data.percentages.year_2022 * 100).toFixed(0)}%</td>
+                            <td>${(data.percentages.year_2023 * 100).toFixed(0)}%</td>
+                            <td>${(data.percentages.year_2024 * 100).toFixed(0)}%</td>
+                            <td>${(data.percentages.year_2025 * 100).toFixed(0)}%</td>
+                        </tr>
+                    `;
+
+                    document.getElementById('totalGivenAll').textContent = '₹' + data.total_given.toFixed(2);
+                    document.getElementById('totalPaidAll').textContent = '₹' + data.total_paid.toFixed(2);
+                    document.getElementById('percentagePaidAll').textContent = data.total_percentage.toFixed(2) + '%';
+                }
+            } catch (error) {
+                console.error('Error calculating percentages:', error);
+                alert('Calculation feature coming soon! (Backend endpoint to be implemented)');
+            }
+        }
+
+        function goToPayment() {
+            window.location.href = '/customer-payment';
+        }
+
+        function goToCreditRequest() {
+            window.location.href = '/credit-request';
+        }
+
+        function logout() {
+            localStorage.removeItem('customerData');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+
+</html>

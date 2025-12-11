@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Rejected</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container" style="max-width: 600px;">
+        <div class="glass-panel animate-fade-in" style="padding: 2rem; text-align: center;">
+            <div style="font-size: 4rem; color: var(--error); margin-bottom: 1rem;">
+                <i class="fas fa-times-circle"></i>
+            </div>
+
+            <h2 style="color: var(--error); margin-bottom: 2rem;">Credit Request Rejected</h2>
+
+            <div class="card"
+                style="background: rgba(239, 68, 68, 0.1); border-color: var(--error); text-align: left; margin-bottom: 2rem;">
+                <p><strong>Requested Amount:</strong> ₹<span id="reqAmount"></span></p>
+                <p><strong>Month/Year:</strong> <span id="reqDate"></span></p>
+
+                <div style="margin: 2rem 0; text-align: center; font-weight: 500;">
+                    Credit request is rejected, Please pay the Balanace amount to get Credit eligibility<br>
+                    Total Amount paid Percentage Should be more than 80%.
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
+
+                <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <p><strong>Total Paid:</strong> ₹<span id="totalPaid"></span></p>
+                        <p><strong>Balance:</strong> ₹<span id="balance"></span></p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p><strong>Paid %:</strong> <span id="paidPercent"></span>%</p>
+                        <p><strong>Balance %:</strong> <span id="balancePercent"></span>%</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <button class="btn btn-secondary" onclick="window.location.href='/customer-home'">Home</button>
+                <button class="btn btn-primary" onclick="window.location.href='/credit-request'">Try Again</button>
+                <button class="btn btn-primary" onclick="window.location.href='/customer-payment'"
+                    style="background: linear-gradient(135deg, #10b981, #059669);">Make Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const result = JSON.parse(localStorage.getItem('creditResult'));
+        if (!result) window.location.href = '/customer-home';
+
+        document.getElementById('reqAmount').textContent = result.requested_amount;
+        document.getElementById('reqDate').textContent = `${result.requested_month.toUpperCase()} ${result.requested_year}`;
+
+        // Handle different response structures
+        const totalPaid = result.total_paid !== undefined ? result.total_paid : 0;
+        const balance = result.balance !== undefined ? result.balance : 0;
+        const percentagePaid = result.percentage_paid !== undefined ? result.percentage_paid : 0;
+
+        document.getElementById('totalPaid').textContent = totalPaid.toFixed(2);
+        document.getElementById('balance').textContent = balance.toFixed(2);
+        document.getElementById('paidPercent').textContent = percentagePaid.toFixed(1);
+        document.getElementById('balancePercent').textContent = (100 - percentagePaid).toFixed(1);
+    </script>
+</body>
+
+</html>

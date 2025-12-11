@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="glass-panel animate-fade-in" style="padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1>Manager Dashboard</h1>
+                <button class="btn btn-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Logout
+                </button>
+            </div>
+
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <h3><i class="fas fa-user-tie" style="color: var(--primary);"></i> Manager Profile</h3>
+                <div style="margin-top: 1.5rem;">
+                    <div class="form-group">
+                        <label>ID</label>
+                        <div class="form-control" id="managerId" style="background: rgba(255,255,255,0.05);"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Name</label>
+                        <div class="form-control" id="managerName" style="background: rgba(255,255,255,0.05);"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <div class="form-control" id="managerEmail" style="background: rgba(255,255,255,0.05);"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <div class="form-control" id="managerPhone" style="background: rgba(255,255,255,0.05);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const managerData = JSON.parse(localStorage.getItem('managerData'));
+
+        if (!managerData) {
+            window.location.href = '/manager-login';
+        } else {
+            document.getElementById('managerId').textContent = managerData.id;
+            document.getElementById('managerName').textContent = managerData.name;
+            document.getElementById('managerEmail').textContent = managerData.mailid;
+            document.getElementById('managerPhone').textContent = managerData.phone_number || managerData.phone;
+        }
+
+        function logout() {
+            localStorage.removeItem('managerData');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+
+</html>
